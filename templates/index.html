@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot FURIA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+        }
+        #chat {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #msgs {
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+        .msg { margin: 10px 0; }
+        .user { color: #ffffff; }
+        .bot { color: #29b6f6; }
+        .error { color: #ff5252; }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #mensagem {
+            flex: 1;
+            padding: 10px;
+            background: #333;
+            color: #eee;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #ffffff;
+            color: #111;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #b9bbba; }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="msgs">
+            <div class="msg bot"><strong>FURIAbot:</strong> Olá! Pergunte sobre jogadores, títulos ou próximos jogos. #FURIA</div>
+        </div>
+        <div id="input-container">
+            <input id="mensagem" placeholder="Digite sua mensagem..." autofocus 
+                   onkeypress="if(event.key === 'Enter') enviar()" />
+            <button onclick="enviar()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const msgsDiv = document.getElementById('msgs');
+        const inputMsg = document.getElementById('mensagem');
+
+        function enviar() {
+            const texto = inputMsg.value.trim();
+            if (!texto) return;
+
+            msgsDiv.innerHTML += `<div class="msg user"><strong>Você:</strong> ${texto}</div>`;
+            inputMsg.value = '';
+            
+            fetch('http://localhost:5000/mensagem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mensagem: texto })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Erro: ${response.statusText}`);
+                return response.json();
+            })
+            .then(data => {
+                const resposta = data.resposta || "Sem resposta.";
+                msgsDiv.innerHTML += `<div class="msg bot"><strong>FURIAbot:</strong> ${resposta.replace(/\n/g, '<br>')}</div>`;
+            })
+            .catch(error => {
+                msgsDiv.innerHTML += `<div class="msg error"><strong>Erro 🤖!!!:</strong> ${error.message}</div>`;
+            })
+            .finally(() => {
+                msgsDiv.scrollTop = msgsDiv.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>
